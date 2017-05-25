@@ -26,24 +26,41 @@ namespace 约车抢购
 
         private void Main_Load(object sender, EventArgs e)
         {
-            getAllTime();
+            updateOutData();
+            updateFrame();
 
         }
 
         /// <summary>
-        /// 获取所有课时
+        /// 更新外部框架
         /// </summary>
-        private async void getAllTime()
+        private void updateOutData()
+        {
+            label5.Text = "姓    名:" + Static.UserName;
+            label6.Text = "教    练:" + Static.TeachName;
+            label7.Text = "剩余学时:" + Static.LeftTime;
+        }
+
+        /// <summary>
+        /// 刷新子框架
+        /// </summary>
+        private async void updateFrame()
         {
             var req = new HttpRequestMessage(HttpMethod.Get, "/book1bycoach.aspx?traintype=%e7%a7%91%e7%9b%ae%e4%b8%89&coachname=%e6%9d%8e%e6%99%93%e5%88%9a");
             var res = await client.SendAsync(req);
             var res_str = await res.Content.ReadAsStringAsync();
-            solve(res_str);
+            resolve(res_str);
         }
+
         string temp = "";
 
         bool continues = true;
-        private void solve(string res_str)
+
+        /// <summary>
+        /// 解析子框架html
+        /// </summary>
+        /// <param name="res_str"></param>
+        private void resolve(string res_str)
         {
             temp = res_str;
             loginPost_temp = new List<KeyValuePair<string, string>>();
@@ -57,7 +74,8 @@ namespace 约车抢购
             loginPost_temp.Add(new KeyValuePair<string, string>("__VIEWSTATEGENERATOR", __VIEWSTATEGENERATOR));
             loginPost_temp.Add(new KeyValuePair<string, string>("__EVENTVALIDATION", __EVENTVALIDATION));
             
-            if (!res_str.Contains("网上约车尚未开始，请在上午8至19间进行约车")&&QK&&res_str.Contains("<a id=\"9\" href=\"javascript:__doPostBack('9','')\">李军</a>"))
+            if (!res_str.Contains("网上约车尚未开始，请在上午8至19间进行约车")&&QK&&
+                res_str.Contains("<a id=\"9\" href=\"javascript:__doPostBack('9','')\">李军</a>"))
             {
                 continues = false;
                 MessageBox.Show("抢课成功");
@@ -93,8 +111,9 @@ namespace 约车抢购
 
         private void button1_Click(object sender, EventArgs e)
         {
+            typeKM = listBox1.Text;
             QK = false;
-            getAllTime();
+            updateFrame();
             invokes();
         }
 
@@ -102,9 +121,12 @@ namespace 约车抢购
 
         int all = 0;
 
+        string typeKM = "";
+
         int real = 0;
         private void button2_Click(object sender, EventArgs e)
         {
+            typeKM = listBox1.Text;
             QK = true;
             continues = true;
             gos = false;
@@ -157,14 +179,14 @@ namespace 约车抢购
             Console.WriteLine(Thread.CurrentThread.ManagedThreadId);
             List<KeyValuePair<string, string>> parms = new List<KeyValuePair<string, string>>(loginPost_temp);
             parms.Add(new KeyValuePair<string, string>("__EVENTTARGET", textBox1.Text));
-            var req = new HttpRequestMessage(HttpMethod.Post, "book1bycoach.aspx?traintype=科目三&coachname=李晓刚");
+            var req = new HttpRequestMessage(HttpMethod.Post, "book1bycoach.aspx?traintype="+ typeKM.Trim() + "&coachname="+Static.TeachName);
             req.Content = new FormUrlEncodedContent(parms);
             var res = Static.client.SendAsync(req);
             res.Wait();
             var res_str = res.Result.Content.ReadAsStringAsync();
             res_str.Wait();
             Console.WriteLine(Thread.CurrentThread.ManagedThreadId);
-            solve(res_str.Result);
+            resolve(res_str.Result);
         }
 
         private void textBox1_TextChanged(object sender, EventArgs e)
@@ -174,6 +196,7 @@ namespace 约车抢购
 
         private void button3_Click(object sender, EventArgs e)
         {
+            typeKM = listBox1.Text;
             go();
         }
 

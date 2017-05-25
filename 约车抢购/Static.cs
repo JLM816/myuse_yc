@@ -13,5 +13,10 @@ namespace 约车抢购
         public static HttpClient client;
         public static HttpClientHandler handler;
         public static CookieContainer cookie;
+
+        public static string UserName = "";
+        public static string TeachName = "";
+        internal static string UseTime;
+        internal static string LeftTime;
     }
 }

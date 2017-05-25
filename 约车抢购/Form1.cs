@@ -19,6 +19,10 @@ namespace 约车抢购
 
         public static bool Success = false;
 
+        public static string loginName = "";
+        public static string loginPwd = "";
+        public static string userName = "";
+
         public Form1()
         {
             InitializeComponent();
@@ -89,13 +93,18 @@ namespace 约车抢购
         }
 
         async void Login()
-        {
+        {  /*
+            if(textBox1.Text == ""|| textBox2.Text == "")
+            {
+                MessageBox.Show("请填写流水号和密码");
+                return;
+            }*/
             List<KeyValuePair<string, string>> parms = new List<KeyValuePair<string, string>>(loginPost_temp);
             parms.Add(new KeyValuePair<string, string>("ImageButton1.x", new Random().Next(10, 40).ToString()));
             parms.Add(new KeyValuePair<string, string>("ImageButton1.y", new Random().Next(0, 15).ToString()));
-
-            parms.Add(new KeyValuePair<string, string>("stuid", textBox1.Text));
-            parms.Add(new KeyValuePair<string, string>("psw", textBox2.Text));
+ 
+            parms.Add(new KeyValuePair<string, string>("stuid", textBox1.Text==""?"": textBox1.Text));
+            parms.Add(new KeyValuePair<string, string>("psw", textBox2.Text == "" ? "" : textBox2.Text));
 
             parms.Add(new KeyValuePair<string, string>("code", textBox3.Text));
 
@@ -103,9 +112,15 @@ namespace 约车抢购
             req.Content = new FormUrlEncodedContent(parms);
             var res = await Static.client.SendAsync(req);
             var res_str = await res.Content.ReadAsStringAsync();
-            if (res_str.Contains("李军"))
+            res_str = Public.myTrim(res_str); 
+            string checkStr = "流水号:" + (textBox1.Text == "" ? "" : textBox1.Text);
+            if (res_str.Contains(checkStr))
             {
-                Success = true; 
+                Static.UserName = new Regex("姓 名:(.*?)<br />").Match(res_str).Groups[1].Value;
+                Static.TeachName = new Regex("分配教练:(.*?)</td>").Match(res_str).Groups[1].Value.Trim();
+                Static.UseTime = new Regex("已练学时:(.*?)<br />").Match(res_str).Groups[1].Value.Trim();
+                Static.LeftTime = new Regex("剩余学时:(.*?)<br />").Match(res_str).Groups[1].Value.Trim();
+                Success = true;
                 this.Close();
             }
             else

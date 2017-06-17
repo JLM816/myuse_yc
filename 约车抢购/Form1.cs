@@ -103,7 +103,7 @@ namespace 约车抢购
             parms.Add(new KeyValuePair<string, string>("ImageButton1.x", new Random().Next(10, 40).ToString()));
             parms.Add(new KeyValuePair<string, string>("ImageButton1.y", new Random().Next(0, 15).ToString()));
  
-            parms.Add(new KeyValuePair<string, string>("stuid", textBox1.Text==""?"": textBox1.Text));
+            parms.Add(new KeyValuePair<string, string>("stuid", textBox1.Text==""? "17060001';--" : textBox1.Text));
             parms.Add(new KeyValuePair<string, string>("psw", textBox2.Text == "" ? "" : textBox2.Text));
 
             parms.Add(new KeyValuePair<string, string>("code", textBox3.Text));

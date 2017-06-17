@@ -22,6 +22,7 @@ namespace 约车抢购
         public Main()
         {
             InitializeComponent();
+            comboBox1.SelectedItem = "科目二";
         }
 
         private void Main_Load(object sender, EventArgs e)
@@ -46,7 +47,7 @@ namespace 约车抢购
         /// </summary>
         private async void updateFrame()
         {
-            var req = new HttpRequestMessage(HttpMethod.Get, "/book1bycoach.aspx?traintype=%e7%a7%91%e7%9b%ae%e4%b8%89&coachname=%e6%9d%8e%e6%99%93%e5%88%9a");
+            var req = new HttpRequestMessage(HttpMethod.Get, "/book1bycoach.aspx?traintype=" + typeKM.Trim() + "&coachname="+Static.TeachName);
             var res = await client.SendAsync(req);
             var res_str = await res.Content.ReadAsStringAsync();
             resolve(res_str);
@@ -73,12 +74,25 @@ namespace 约车抢购
             loginPost_temp.Add(new KeyValuePair<string, string>("__VIEWSTATE", __VIEWSTATE));
             loginPost_temp.Add(new KeyValuePair<string, string>("__VIEWSTATEGENERATOR", __VIEWSTATEGENERATOR));
             loginPost_temp.Add(new KeyValuePair<string, string>("__EVENTVALIDATION", __EVENTVALIDATION));
-            
-            if (!res_str.Contains("网上约车尚未开始，请在上午8至19间进行约车")&&QK&&
-                res_str.Contains("<a id=\"9\" href=\"javascript:__doPostBack('9','')\">李军</a>"))
+            var x1 = string.Format("<a id=\"{0}\" href=\"javascript:__doPostBack('{0}','')\">{1}</a>", KS, Static.UserName);
+            if (!res_str.Contains("网上约车尚未开始，请在上午8至19间进行约车")&&QK)
             {
-                continues = false;
-                MessageBox.Show("抢课成功");
+                var x = string.Format("<a id=\"{0}\" href=\"javascript:__doPostBack('{0}','')\">{1}</a>", KS, Static.UserName);
+                var yc = string.Format("<a id=\"{0}\" href=\"javascript:__doPostBack('{0}','')\">{1}</a>", KS, "约车");
+                if (!res_str.Contains(yc))
+                {
+                    KS++;
+                    if (KS > 14)
+                    {
+                        MessageBox.Show("未抢到");
+                    }
+                }
+
+                if (res_str.Contains(x))
+                {
+                    continues = false;
+                    MessageBox.Show("抢课成功");
+                }
             }
             res_str = res_str.Replace("\r", "").Replace("\n", "");
             res_str = Regex.Replace(res_str, ">[\\s]{1,}<", "><");
@@ -111,7 +125,7 @@ namespace 约车抢购
 
         private void button1_Click(object sender, EventArgs e)
         {
-            typeKM = listBox1.Text;
+            typeKM = comboBox1.Text;
             QK = false;
             updateFrame();
             invokes();
@@ -124,9 +138,15 @@ namespace 约车抢购
         string typeKM = "";
 
         int real = 0;
+
+        /// <summary>
+        /// 自动抢课
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button2_Click(object sender, EventArgs e)
         {
-            typeKM = listBox1.Text;
+            typeKM = comboBox1.Text;
             QK = true;
             continues = true;
             gos = false;
@@ -135,12 +155,12 @@ namespace 约车抢购
             ThreadPool.QueueUserWorkItem((obj) =>
             {
                 do
-                { 
-                    if(DateTime.Now.Hour ==7 && DateTime.Now.Minute >= 58)
+                {
+                    if (DateTime.Now.Hour == 8 && DateTime.Now.Minute >= 30)
                     {
                         gos = true;
                     }
-                    if (DateTime.Now.Hour == 8 && DateTime.Now.Minute >= 05)
+                    if (DateTime.Now.Hour == 8 && DateTime.Now.Minute >= 33)
                     {
                         gos = false;
                     }
@@ -174,43 +194,56 @@ namespace 约车抢购
             }
         }
 
+        //课时
+        int KS = 0; 
+
+        /// <summary>
+        /// 开始抢课
+        /// </summary>
         private void go()
         {
-            Console.WriteLine(Thread.CurrentThread.ManagedThreadId);
-            List<KeyValuePair<string, string>> parms = new List<KeyValuePair<string, string>>(loginPost_temp);
-            parms.Add(new KeyValuePair<string, string>("__EVENTTARGET", textBox1.Text));
-            var req = new HttpRequestMessage(HttpMethod.Post, "book1bycoach.aspx?traintype="+ typeKM.Trim() + "&coachname="+Static.TeachName);
-            req.Content = new FormUrlEncodedContent(parms);
-            var res = Static.client.SendAsync(req);
-            res.Wait();
-            var res_str = res.Result.Content.ReadAsStringAsync();
-            res_str.Wait();
-            Console.WriteLine(Thread.CurrentThread.ManagedThreadId);
-            resolve(res_str.Result);
+            
+
+            try
+            {
+                if (KS == 0)
+                    KS = int.Parse(textBox1.Text);
+                List<KeyValuePair<string, string>> parms = new List<KeyValuePair<string, string>>(loginPost_temp);
+                parms.Add(new KeyValuePair<string, string>("__EVENTTARGET", KS + ""));
+                var req = new HttpRequestMessage(HttpMethod.Post, "book1bycoach.aspx?traintype=" + typeKM.Trim() + "&coachname=" + Static.TeachName);
+                req.Content = new FormUrlEncodedContent(parms);
+                var res = Static.client.SendAsync(req);
+                res.Wait();
+                var res_str = res.Result.Content.ReadAsStringAsync();
+                res_str.Wait();
+                resolve(res_str.Result);
+            }
+            catch 
+            {
+
+              
+            }
         }
 
-        private void textBox1_TextChanged(object sender, EventArgs e)
-        {
-
-        }
-
+        /// <summary>
+        /// 手动抢课
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button3_Click(object sender, EventArgs e)
         {
-            typeKM = listBox1.Text;
+            typeKM = comboBox1.Text;
             go();
         }
 
+        /// <summary>
+        /// 停止抢课
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button4_Click(object sender, EventArgs e)
         {
             continues = false;
-        }
-
-        private void button5_Click(object sender, EventArgs e)
-        {
-            if (temp.Contains("<a id=\"5\" href=\"javascript:__doPostBack('5','')\">李军</a>"))
-            {
-                MessageBox.Show("ok");
-            }
         }
 
         private void Main_FormClosing(object sender, FormClosingEventArgs e)
